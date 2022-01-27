@@ -14,7 +14,7 @@ img7 = imread('07.png')
 img8 = imread('08.png')
 img9 = imread('09.png')
 
-def align(img, g_coord):
+def align(img, g_coord, name):
     #load and convert to float
     img_f = skimage.img_as_float(img)
 
@@ -31,41 +31,49 @@ def align(img, g_coord):
     w = b.shape[1]
     cutH = (h // 100) * 5
     cutW = (w // 100) * 5
-    #b = b[cutH: h - cutH, cutW: w - cutW]
-    #g = g[cutH: h - cutH, cutW: w - cutW]
-    #r = r[cutH: h - cutH, cutW: w - cutW]
-    b = b[0: h, cutW: w - cutW]
-    g = g[0: h, cutW: w - cutW]
-    r = r[0: h, cutW: w - cutW]
+    b = b[cutH: h - cutH, cutW: w - cutW]
+    g = g[cutH: h - cutH, cutW: w - cutW]
+    r = r[cutH: h - cutH, cutW: w - cutW]
+    #b = b[0: delimeter, cutW: w - cutW]
+    #g = g[0: delimeter, cutW: w - cutW]
+    #r = r[0: delimeter, cutW: w - cutW]
 
     #roll blue
     best_b_x = 0
     best_b_y = 0
     max_corr_b = 0.0
-    for i in range(15):
-        for j in range(15):
-            b_temp = np.roll(b, i, axis=0)
-            b_temp = np.roll(b, j, axis=1)
-            correlation = (b_temp * g).sum()
-            if(correlation > max_corr_b):
-                max_corr_b = correlation
-                best_b_x = i
-                best_b_y = j
+    for i in range(15, -15, -1):
+        b_temp = np.roll(b, i, axis=0)
+        correlation = (b_temp * g).sum()
+        if(correlation > max_corr_b):
+            max_corr_b = correlation
+            best_b_x = i
+
+    for j in range(15, -15, -1):
+        b_temp = np.roll(b, j, axis=1)
+        correlation = (b_temp * g).sum()
+        if(correlation > max_corr_b):
+            max_corr_b = correlation
+            best_b_y = j
     #print(max_corr_b)
 
     #roll red
     max_corr_r = 0.0
     best_r_x = 0
     best_r_y = 0
-    for i in range(15):
-        for j in range(15):
-            r_temp = np.roll(r, i, axis=0)
-            r_temp = np.roll(r, j, axis=1)
-            correlation = (r_temp * g).sum()
-            if(correlation > max_corr_r):
-                max_corr_r = correlation
-                best_r_x = i
-                best_r_y = j
+    for i in range(15, -15, -1):
+        r_temp = np.roll(r, i, axis=0)
+        correlation = (r_temp * g).sum()
+        if (correlation > max_corr_r):
+            max_corr_r = correlation
+            best_r_x = i
+
+    for j in range(15, -15, -1):
+        r_temp = np.roll(r, j, axis=1)
+        correlation = (r_temp * g).sum()
+        if(correlation > max_corr_r):
+            max_corr_r = correlation
+            best_r_y = j
     #print(max_corr_r)
 
     #shift the best layers
@@ -78,15 +86,16 @@ def align(img, g_coord):
     b = skimage.img_as_ubyte(b)
     g = skimage.img_as_ubyte(g)
     r = skimage.img_as_ubyte(r)
-    img = dstack((r, g, b))
+    img_result = dstack((r, g, b))
 
     #test
     y_g, x_g = g_coord
     b_x_true = x_g - (cutW * 2)
-    b_y_true = y_g - (delimeter - 0)#cutH)
+    b_y_true = y_g - (delimeter - cutH)
     r_x_true = x_g - (cutW * 2)
-    r_y_true = y_g + (delimeter - 0 )#cutH)
+    r_y_true = y_g + (delimeter - cutH)
 
+    #hCut was removed
     b_x = x_g - ((cutW * 2) + best_b_x)
     b_y = y_g - (delimeter + best_b_y)
     r_x = x_g - ((cutW * 2) + (best_r_x))
@@ -113,17 +122,17 @@ def align(img, g_coord):
     diff =  abs(row_b - true_row_b) + abs(col_b - true_col_b) + abs(row_r - true_row_r) + abs(col_r - true_col_r)
     print(diff)
 
-    imsave('out/img.png', img)
+    imsave("out/" + str(name) + ".png", img_result)
 
     return (row_b, col_b), (row_r, col_r)
 
-align(img0, (508, 237))
-#align(img1, (508, 237))
-#align(img2, (508, 237))
-#align(img3, (508, 237))
-#align(img4, (508, 237))
-#align(img5, (508, 237))
-#align(img6, (508, 237))
-#align(img7, (508, 237))
-#align(img8, (508, 237))
-#align(img9, (508, 237))
+align(img0, (508, 237),0)
+align(img1, (508, 237),1)
+align(img2, (508, 237),2)
+align(img3, (508, 237),3)
+align(img4, (508, 237),4)
+align(img5, (508, 237),5)
+align(img6, (508, 237),6)
+align(img7, (508, 237),7)
+align(img8, (508, 237),8)
+align(img9, (508, 237),9)
