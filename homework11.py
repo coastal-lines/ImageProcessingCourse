@@ -100,7 +100,7 @@ def align(img, g_coord):
     true_row_r = y_g + delimeter
     true_col_r = x_g
 
-    diff = abs(row_b - true_row_b) + abs(col_b - true_col_b) + abs(row_r - true_row_r) + abs(col_r - true_col_r)
+    diff = abs(true_row_b - row_b) + abs(true_col_b - col_b) + abs(true_row_r - row_r) + abs(true_col_r - col_r)
     print("diff:      " + str(diff))
     print("actual:    " + str([row_b, col_b, row_r, col_r]))
     print("===============================")
