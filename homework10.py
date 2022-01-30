@@ -67,19 +67,18 @@ def align(img, g_coord, name, scores):
     g = img_f[delimeter : delimeter * 2, 0: w]
     r = img_f[delimeter * 2 : h, 0: w]
 
-    #cut borders 5%
-    h = b.shape[0]
-    w = b.shape[1]
-    cutH = (h // 100) * 10
-    cutW = (w // 100) * 10
-    b = b[cutH: h - cutH, cutW: w - cutW]
-    g = g[cutH: h - cutH, cutW: w - cutW]
-    r = r[cutH: h - cutH, cutW: w - cutW]
-
-
     imsave("out/b.png", skimage.img_as_ubyte(b))
     imsave("out/g.png", skimage.img_as_ubyte(g))
     imsave("out/r.png", skimage.img_as_ubyte(r))
+
+    #cut borders 5%
+    h = b.shape[0]
+    w = b.shape[1]
+    cutH = (h // 100) * 3
+    cutW = (w // 100) * 5
+    b = b[cutH: h - cutH, cutW: w - cutW]
+    g = g[cutH: h - cutH, cutW: w - cutW]
+    r = r[cutH: h - cutH, cutW: w - cutW]
 
     best_b_x, best_b_y, best_b_channel = roll(b, g)
     best_r_x, best_r_y, best_r_channel = roll(r, g)
@@ -93,13 +92,13 @@ def align(img, g_coord, name, scores):
     #best_r_x = best_r_x + cutW*2
     #best_r_y = best_b_y + cutH*2
 
-    row_b = ((y_g - best_b_y) + cutH + cutH) - delimeter
-    col_b = (x_g - best_b_x) + cutW
+    row_b = (y_g - best_b_y) - delimeter
+    col_b = (x_g - best_b_x)
     true_row_b = y_g - delimeter
     true_col_b = x_g
 
-    row_r = ((y_g - best_r_y) + cutH + cutH) + delimeter
-    col_r = (x_g - best_r_x) + cutW
+    row_r = (y_g - best_r_y) + delimeter
+    col_r = x_g - best_r_x
     true_row_r = y_g + delimeter
     true_col_r = x_g
 
@@ -117,19 +116,19 @@ def align(img, g_coord, name, scores):
 
     img_result = dstack((r, g, b))
     imsave("out/" + str(name) + ".png", img_result)
-    #imsave("out/b.png", b)
-    #imsave("out/g.png", g)
-    #imsave("out/r.png", r)
+    imsave("out/b.png", b)
+    imsave("out/g.png", g)
+    imsave("out/r.png", r)
 
     #return (row_b, col_b), (row_r, col_r)
 
-align(img0, (508, 237), 0, [153,236,858,238])
-#align(img1, (483, 218), 1, [145, 219,817, 218])
-#align(img2, (557, 141), 2, [204, 143, 908, 140])
-#align(img3, (627, 179), 3, [243, 179, 1010, 176])
-#align(img4, (540, 96), 4, [154, 95, 922, 94])
-#align(img5, (641, 369), 5, [258, 372, 1021, 368])
-#align(img6, (527, 196), 6, [144, 198, 908, 193])
-##align(img7, (430, 140), 7, [82, 140, 777, 141])
-#align(img8, (502, 254), 8, [123, 259, 880, 251])
-#align(img9, (493, 238), 9, [114, 240, 871, 235])
+###align(img0, (508, 237), 0, [153,236,858,238])
+###align(img1, (483, 218), 1, [145, 219,817, 218])
+###align(img2, (557, 141), 2, [204, 143, 908, 140])
+###align(img3, (627, 179), 3, [243, 179, 1010, 176])
+###align(img4, (540, 96), 4, [154, 95, 922, 94])
+###align(img5, (641, 369), 5, [258, 372, 1021, 368])
+###align(img6, (527, 196), 6, [144, 198, 908, 193])
+###align(img7, (430, 140), 7, [82, 140, 777, 141])
+###align(img8, (502, 254), 8, [123, 259, 880, 251])
+align(img9, (493, 238), 9, [114, 240, 871, 235])
