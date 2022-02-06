@@ -1,18 +1,20 @@
-import skimage
-from skimage.io import imread, imsave
+import skimage.io
+from skimage.io import imread, imshow
+from matplotlib.pyplot import hist
+import matplotlib.pyplot as plt
 import numpy as np
-from numpy import histogram
-from matplotlib import pyplot as plt
-from numpy import dstack
-from numpy import ravel
 
 #int
 print("int: ")
-img = imread('img.png')
+img = imread('img_.png')
+values, bin_edges, patches = hist(img[:,:,0].ravel(), bins=range(257))
+#plt.show()
+
 threshold1 = round(img[:,:,0].size * 0.05)
 vector = np.reshape(img[:,:,0], -1)
 vector.sort()
-values, bin_edges = histogram(vector.ravel(), bins=range(257))
+values, bin_edges, patches = hist(vector, bins=range(257))
+#plt.show()
 
 count = 0
 x_min_shifted = 0
@@ -35,6 +37,11 @@ for i in range(255, 0, -1):
 #float
 print("float: ")
 img_f = skimage.img_as_float(img[:,:,0])
+vector2 = np.reshape(img_f, -1)
 threshold2 = round(img_f.size * 0.05)
-values2 = sorted(ravel(img_f))
-#print(values2)
+vector2 = sorted(vector2)
+
+min_float = vector2[threshold2 + 1]
+max_float = vector2[-(threshold2 + 1)]
+print(min_float)
+print(max_float)
