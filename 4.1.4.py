@@ -1,9 +1,4 @@
-#На стандартный вход подается параметр σ гауссовского фильтра.
-#Подсчитайте и напечатайте на стандартый вывод элементы ядра.
-#Для подсчета значений функции Гаусса используйте функцию из предыдущего задания.
-#σ может быть нецелым, тогда округлите K K с помощью функции round.
-#Элементы ядра выводите с 5 цифрами после запятой.
-
+import numpy as np
 import math
 
 def gauss(arr):
@@ -11,9 +6,9 @@ def gauss(arr):
     x = arr[1]
     y = arr[2]
 
+    o_pow = math.pow(o, 2)
     x_pow = math.pow(x,2)
     y_pow = math.pow(y,2)
-    o_pow = math.pow(o,2)
 
     p1 = 1 / (2 * math.pi * o_pow)
     p2 = (-x_pow - y_pow) / (2 * o_pow)
@@ -22,25 +17,55 @@ def gauss(arr):
     return p3
 
 def k_width(o):
-    k = round((o * 6) + 1)
+    s = (o * 6) + 1
+    k = round(s)
+
+    if(k % 2 == 0):
+        k = k+1
+
+    #print("k: " + str(k))
     return k
 
-#arr = [1,1,1]
-#print(gauss(arr))
 
-o = k_width(0.33)
-all = gauss([o,-1,1]) + gauss([o,-1,0]) + gauss([o,-1,-1]) + gauss([o,0,1]) + gauss([o,0,0]) + gauss([o,0,-1]) + gauss([o,1,1]) + gauss([o,1,0]) + gauss([o,1,-1])
-#print(gauss([o,-1,1]))
-#print(gauss([o,-1,0]))
-#print(gauss([o,-1,-1]))
+def calculate_sum(o, k):
+    sum = 0
+    radius = k // 2
+    for i in range(0 - radius, radius + 1, 1):
+        for j in range(0 - radius, radius + 1, 1):
+            sum += gauss([o, i, j])
 
-#print(gauss([o,0,1]))
-print(gauss([o,0,0]) / all)
-#print(gauss([o,0,-1]))
+    return sum
 
-#print(gauss([o,1,1]))
-#print(gauss([o,1,0]))
-#print(gauss([o,1,-1]))
+def get_kernel(o, k, sum):
+    kernel = []
+    radius = k // 2
 
-#print(k_width(2))
-#print(k_width(5))
+    for i in range(0 - radius, radius + 1, 1):
+        for j in range(0 - radius, radius + 1, 1):
+            p = gauss([o, i, j]) / sum
+            kernel.append(p)
+
+    #if(k % 2 == 0):
+    #    k = k + 1
+
+    return np.reshape(kernel, [k, k])
+
+def calculate_kernel(o):
+    k = k_width(o)
+    sum = calculate_sum(o, k)
+    kernel = get_kernel(o, k, sum)
+
+    lines = []
+    for row in kernel:
+        lines.append(' '.join(str("{:.5f}".format(x)) for x in row))
+    print('\n'.join(lines))
+
+calculate_kernel(input())
+#calculate_kernel(0.19)
+#calculate_kernel(0.23)
+#calculate_kernel(0.5)
+#calculate_kernel(0.52)
+#calculate_kernel(0.553)
+#calculate_kernel(0.86)
+#calculate_kernel(0.9)
+calculate_kernel(2)
