@@ -1,26 +1,17 @@
-import numpy as np
-import math
-import scipy
-from numpy import uint8
-from skimage import img_as_ubyte
 from skimage.io import imread, imsave
-import scipy.signal
+from numpy import array, ndarray, clip
 
-img = imread("tiger-gray-small.png")
 
-kernel = np.array([[-1, -2, -1],[-2, 22, -2],[-1, -2, -1]], dtype=int)*0.1
+def calculate(img, kernel):
+    temp = ndarray(shape=(img.shape[0] - kernel.shape[0] // 2 * 2, img.shape[1] - kernel.shape[0] // 2 * 2), dtype=int)
+    for i in range(temp.shape[0]):
+        for j in range(temp.shape[1]):
+            temp[i, j] = int((img[i: i + kernel.shape[0], j: j + kernel.shape[0]] * kernel).sum())
+    return clip(temp, 0, 255)
 
-res = scipy.signal.convolve2d(img, kernel, mode='valid', boundary='fill', fillvalue=1)
-res = np.clip(res,0,255)
-res = res.astype('uint8')
-test = imread('unsharp-tiger.png')
 
-a = []
-for i in range(res.shape[0]):
-    for j in range(res.shape[1]):
-        if(res[i,j] != test[i,j]):
-            a.append([i,j,test[i,j].astype('uint8')])
-            print([i,j,test[i,j].astype('uint8')])
+img = imread('img.png')
+kernel = 0.1 * array([[-1, -2, -1], [-2, 22, -2], [-1, -2, -1]])
+res_img = calculate(img, kernel)
 
-np.savetxt("t3.txt", a, delimiter=",", fmt='%s')
-
+imsave("out_img.png", res_img)
