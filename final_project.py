@@ -55,6 +55,14 @@ print(np.mean(freq1) > np.mean(freq2) and np.mean(freq2) > np.mean(freq3) and np
 # step 2.3
 # Постройте пирамиду для трех различных значения сигмы гауссовского ядра
 def gauss_pyramide(img, sigma, n_layers):
-    #нужно реализовать для n числа слоёв
-    #??? mode='nearest'
-    skimage.filters.gaussian(apple, sigma=2, mode='nearest')
+
+    result = []
+    temp_gauss = skimage.filters.gaussian(img, sigma=sigma, mode='nearest')
+
+    for s in n_layers - 1:
+        temp_gauss = skimage.filters.gaussian(temp_gauss, sigma=sigma, mode='nearest')
+        result.append(temp_gauss)
+
+    return result
+
+gauss_pyramide()
