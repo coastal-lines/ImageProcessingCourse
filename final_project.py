@@ -15,11 +15,11 @@ orange = imread("orange.bmp")
 
 #step 2.1
 #Постройте гауссовскую пирамиду изображения из не менее чем пяти слоев
-g1 = skimage.filters.gaussian(apple, sigma=2, mode='nearest')
-g2 = skimage.filters.gaussian(g1, sigma=2, mode='nearest')
-g3 = skimage.filters.gaussian(g2, sigma=3, mode='nearest')
-g4 = skimage.filters.gaussian(g3, sigma=3, mode='nearest')
-g5 = skimage.filters.gaussian(g4, sigma=4, mode='nearest')
+g1 = skimage.filters.gaussian(apple, sigma=1, mode='nearest')
+g2 = skimage.filters.gaussian(g1, sigma=3, mode='nearest')
+g3 = skimage.filters.gaussian(g2, sigma=5, mode='nearest')
+g4 = skimage.filters.gaussian(g3, sigma=7, mode='nearest')
+g5 = skimage.filters.gaussian(g4, sigma=9, mode='nearest')
 
 # step 2.2
 # Визуализируйте полученные изображения и амплитуды частот изображений пирамиды
@@ -29,19 +29,24 @@ freq3 = np.log(1 + abs(np.fft.fftshift(np.fft.fft2(g3))))
 freq4 = np.log(1 + abs(np.fft.fftshift(np.fft.fft2(g4))))
 freq5 = np.log(1 + abs(np.fft.fftshift(np.fft.fft2(g5))))
 
-fig = plt.figure(figsize=(18, 8))
+fig = plt.figure(figsize=(16, 8), dpi=100)
 columns = 3
 rows = 2
 fig.add_subplot(rows, columns, 1)
 plt.imshow(freq1[:,:,0])
+
 fig.add_subplot(rows, columns, 2)
 plt.imshow(freq2[:,:,0])
+
 fig.add_subplot(rows, columns, 3)
 plt.imshow(freq3[:,:,0])
+
 fig.add_subplot(rows, columns, 4)
 plt.imshow(freq4[:,:,0])
+
 fig.add_subplot(rows, columns, 5)
 plt.imshow(freq5[:,:,0])
+
 plt.show()
 
 # и убедитесь, что на каждом слое диапазон частот сужается
@@ -54,15 +59,3 @@ print(np.mean(freq1) > np.mean(freq2) and np.mean(freq2) > np.mean(freq3) and np
 
 # step 2.3
 # Постройте пирамиду для трех различных значения сигмы гауссовского ядра
-def gauss_pyramide(img, sigma, n_layers):
-
-    result = []
-    temp_gauss = skimage.filters.gaussian(img, sigma=sigma, mode='nearest')
-
-    for s in n_layers - 1:
-        temp_gauss = skimage.filters.gaussian(temp_gauss, sigma=sigma, mode='nearest')
-        result.append(temp_gauss)
-
-    return result
-
-gauss_pyramide()
