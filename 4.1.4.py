@@ -47,6 +47,9 @@ def get_kernel(sigma, kernel_width, sum):
     kernel = []
     radius = kernel_width // 2
 
+    #sum of all elements of kernel we divide by size of kernel
+    #we need this because sum should be equal 1
+    #in this case image will not change brightness
     for i in range(0 - radius, radius + 1, 1):
         for j in range(0 - radius, radius + 1, 1):
             p = gauss([sigma, i, j]) / sum
