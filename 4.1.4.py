@@ -1,6 +1,8 @@
 import numpy as np
 import math
 
+#calculating kernel of Gauss filter by sigma value
+
 def gauss(arr):
     o = arr[0]
     x = arr[1]
@@ -16,6 +18,11 @@ def gauss(arr):
 
     return p3
 
+#calculate radius of the filter
+#it equals sigma * 3
+#so if sigma == 1 then radius == 3 and kernel == 7 pixels
+#if sigma == 2 then radius == 6 and kernel == 13 pixels
+#"k" is width of filter or size of kernel
 def k_width(o):
     s = (o * 6) + 1
     k = round(s)
@@ -26,34 +33,34 @@ def k_width(o):
     #print("k: " + str(k))
     return k
 
-
-def calculate_sum(o, k):
+#sum of all pixels in kernel
+def calculate_sum(sigma, kernel_width):
     sum = 0
-    radius = k // 2
+    radius = kernel_width // 2
     for i in range(0 - radius, radius + 1, 1):
         for j in range(0 - radius, radius + 1, 1):
-            sum += gauss([o, i, j])
+            sum += gauss([sigma, i, j])
 
     return sum
 
-def get_kernel(o, k, sum):
+def get_kernel(sigma, kernel_width, sum):
     kernel = []
-    radius = k // 2
+    radius = kernel_width // 2
 
     for i in range(0 - radius, radius + 1, 1):
         for j in range(0 - radius, radius + 1, 1):
-            p = gauss([o, i, j]) / sum
+            p = gauss([sigma, i, j]) / sum
             kernel.append(p)
 
     #if(k % 2 == 0):
     #    k = k + 1
 
-    return np.reshape(kernel, [k, k])
+    return np.reshape(kernel, [kernel_width, kernel_width])
 
-def calculate_kernel(o):
-    k = k_width(o)
-    sum = calculate_sum(o, k)
-    kernel = get_kernel(o, k, sum)
+def calculate_kernel(sigma):
+    kernel_width = k_width(sigma)
+    sum = calculate_sum(sigma, kernel_width)
+    kernel = get_kernel(sigma, kernel_width, sum)
 
     lines = []
     for row in kernel:
