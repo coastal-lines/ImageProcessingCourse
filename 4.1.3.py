@@ -3,17 +3,19 @@ import skimage.io
 from skimage.io import imread,imsave
 import math
 
+#we have sigma, x, y
+#calculating value of the Gauss function
 def gauss(arr):
-    o = arr[0]
+    sigma = arr[0]
     x = arr[1]
     y = arr[2]
 
     x_pow = math.pow(x,2)
     y_pow = math.pow(y,2)
-    o_pow = math.pow(o,2)
+    sigma_pow = math.pow(sigma,2)
 
-    p1 = 1 / (2 * math.pi * o_pow)
-    p2 = (-x_pow - y_pow) / (2 * o_pow)
+    p1 = 1 / (2 * math.pi * sigma_pow)
+    p2 = (-x_pow - y_pow) / (2 * sigma_pow)
     p3 = p1 * (math.e ** p2)
 
     return p3
