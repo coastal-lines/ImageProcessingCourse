@@ -22,8 +22,16 @@ r = w // 2
 new_img = np.zeros((img.shape[0] + (r * 2), img.shape[1] + (r * 2), img.shape[2]) ,np.uint8)
 print(new_img.shape)
 
+print("===")
 #top
 top = img[0:r, 0:img.shape[1]]
 print(top.shape)
 #bottom
-bottom = img[0:r, 0:img.shape[1]]
+bottom = img[img.shape[0]-r:img.shape[0], 0:img.shape[1]]
+print(bottom.shape)
+#left
+left = img[0:img.shape[0], 0:r]
+print(left.shape)
+#right
+right = img[0:img.shape[0], img.shape[1] - r:img.shape[1]]
+print(right.shape)
