@@ -26,8 +26,14 @@ def show_frequencies(array_of_images):
     plt.show()
     plt.clf()
 
-#make method for this:
-#print(np.mean(freq1) > np.mean(freq2) and np.mean(freq2) > np.mean(freq3) and np.mean(freq3) > np.mean(freq4) and np.mean(freq4) > np.mean(freq5))
+def check_frequencies(array_of_images):
+
+    #freq_array = []
+    for i in range(len(array_of_images) - 1):
+        freq = np.log(1 + abs(np.fft.fftshift(np.fft.fft2(array_of_images[i]))))
+        freq_next = np.log(1 + abs(np.fft.fftshift(np.fft.fft2(array_of_images[i + 1]))))
+        if(np.mean(freq) < np.mean(freq_next)):
+            print("!!! something wrong with freq !!!")
 
 def extend_image(img, kernel_width):
 
@@ -149,9 +155,11 @@ def gauss_pyramid(img, sigma, n_layers):
     return images_gauss_pyramid
 
 # step 1
+#
 apple = imread("apple_bw_small.bmp")
 orange = imread("orange.bmp")
 
 
 images_gauss_pyramid = gauss_pyramid(apple, [1,3,5], 3)
+check_frequencies(images_gauss_pyramid)
 show_frequencies(images_gauss_pyramid)
