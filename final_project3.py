@@ -8,6 +8,27 @@ def show(img):
     plt.imshow(img, cmap='gray')
     plt.show()
 
+def show_frequencies(array_of_images):
+    fig = plt.figure(figsize=(16, 8), dpi=100)
+    columns = len(array_of_images)
+    #rows = 2
+
+    for i in range(len(array_of_images)):
+        #1 - first line for images
+        fig.add_subplot(1, columns, i + 1)
+        plt.imshow(array_of_images[i])
+
+        #2 - second line for frequencies
+        freq = np.log(1 + abs(np.fft.fftshift(np.fft.fft2(array_of_images[i]))))
+        fig.add_subplot(2, columns, i + 1)
+        plt.imshow(freq)
+
+    plt.show()
+    plt.clf()
+
+#make method for this:
+#print(np.mean(freq1) > np.mean(freq2) and np.mean(freq2) > np.mean(freq3) and np.mean(freq3) > np.mean(freq4) and np.mean(freq4) > np.mean(freq5))
+
 def extend_image(img, kernel_width):
 
     #extend image if kernel equals 7*7
@@ -19,7 +40,12 @@ def extend_image(img, kernel_width):
     r = kernel_width // 2
 
     #make new extended image
-    new_img = np.zeros((img.shape[0] + (r * 2), img.shape[1] + (r * 2), img.shape[2]) ,np.uint8)
+    if(len(img.shape) == 3):
+        #rgb
+        new_img = np.zeros((img.shape[0] + (r * 2), img.shape[1] + (r * 2), img.shape[2]) ,np.uint8)
+    else:
+        #bw
+        new_img = np.zeros((img.shape[0] + (r * 2), img.shape[1] + (r * 2)), np.uint8)
 
     #top
     top = img[0:r, 0:img.shape[1]]
@@ -52,73 +78,80 @@ def extend_image(img, kernel_width):
 
     return new_img
 
-def apply_gauss_blur(img, sigma):
+def blur(img, sigma):
 
     #calculate kernel width
-    kernel_width = (sigma * 6) + 1
-    kernel_width = round(kernel_width)
+    kernel_width = round((sigma * 6) + 1)
+
+    img = extend_image(img, kernel_width)
 
     if(kernel_width % 2 == 0):
         kernel_width = kernel_width + 1
 
-    sum = 0
-    radius = kernel_width // 2
-    for i in range(0 - radius, radius + 1, 1):
-        for j in range(0 - radius, radius + 1, 1):
+    #calculate sum of all pixels in kernel
+    sum_of_all_kernel_items = 0
+    kernel_radius = kernel_width // 2
+    for x in range(0 - kernel_radius, kernel_radius + 1, 1):
+        for y in range(0 - kernel_radius, kernel_radius + 1, 1):
             o_pow = math.pow(sigma, 2)
-            x_pow = math.pow(i, 2)
-            y_pow = math.pow(j, 2)
+            x_pow = math.pow(x, 2)
+            y_pow = math.pow(y, 2)
+            sum_in_current_pixel = (1 / (2 * math.pi * o_pow)) * (math.e ** ((-x_pow - y_pow) / (2 * o_pow)))
+            sum_of_all_kernel_items += sum_in_current_pixel
 
-            result1 = 1 / (2 * math.pi * o_pow)
-            result2 = (-x_pow - y_pow) / (2 * o_pow)
-            sum += result1 * (math.e ** result2)
-
-    result = 0
+    # prepare kernel
     kernel = []
-    radius = kernel_width // 2
-    for i in range(0 - radius, radius + 1, 1):
-        for j in range(0 - radius, radius + 1, 1):
+
+    for x in range(0 - kernel_radius, kernel_radius + 1, 1):
+        for y in range(0 - kernel_radius, kernel_radius + 1, 1):
             o_pow = math.pow(sigma, 2)
-            x_pow = math.pow(i, 2)
-            y_pow = math.pow(j, 2)
-
-            result1 = 1 / (2 * math.pi * o_pow)
-            result2 = (-x_pow - y_pow) / (2 * o_pow)
-            result += result1 * (math.e ** result2)
-
-            sum = result / sum
-            kernel.append(sum)
+            x_pow = math.pow(x, 2)
+            y_pow = math.pow(y, 2)
+            sum_in_current_pixel = (1 / (2 * math.pi * o_pow)) * (math.e ** ((-x_pow - y_pow) / (2 * o_pow)))
+            item = sum_in_current_pixel / sum_of_all_kernel_items
+            kernel.append(item)
 
     kernel = np.reshape(kernel, [kernel_width, kernel_width])
 
+    #apply kernel
     border = kernel[0].size // 2
     temp = []
     for i in range(border, img.shape[0] - border):
         for j in range(border, img.shape[1] - border):
             matrix = img[i - border: i + border + 1, j - border: j + border + 1]
-
+            #res = apply_kernel(matrix, kernel)
             sum = 0
             arr = np.reshape(matrix, -1)
             arr = arr[::-1]
-            kernel = np.reshape(kernel, -1)
+            k = np.reshape(kernel, -1)
 
-            for k in range(arr.size):
-                sum += arr[k] * kernel[k]
+            for m in range(matrix.size):
+                sum += arr[m] * k[m]
 
             temp.append(sum)
 
-    temp = np.reshape(temp, [img.shape[0] - (border * 2), img.shape[1] - (border * 2)])
-    temp = np.ndarray.astype(temp, np.uint8)
+    blur = np.reshape(temp, [img.shape[0] - (border * 2), img.shape[1] - (border * 2)])
+    blur = np.ndarray.astype(blur, np.uint8)
+    return blur
 
-    return temp
+def gauss_pyramid(img, sigma, n_layers):
+
+    images_gauss_pyramid = []
+    temp_img = blur(img, sigma[0])
+
+    for i in range(n_layers):
+        if(i == 0):
+            temp_img = blur(img, sigma[i])
+        else:
+            temp_img = blur(temp_img, sigma[i])
+        images_gauss_pyramid.append(temp_img)
+
+    return images_gauss_pyramid
 
 # step 1
-# Подготовьте одно изображение для экспериментов с гауссовской и лапласовской пирамидой.
-apple = imread("apple_bw.bmp")
+apple = imread("apple_bw_small.bmp")
 orange = imread("orange.bmp")
 
 
-i = apply_gauss_blur(apple, 0.66)
-show(i)
-
-
+images_gauss_pyramid = gauss_pyramid(apple, [1,3,5], 3)
+show_frequencies(images_gauss_pyramid)
