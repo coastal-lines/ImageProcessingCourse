@@ -26,6 +26,19 @@ def show_frequencies_and_images(array_of_images):
     plt.show()
     plt.clf()
 
+def show_images(array_of_images):
+    fig = plt.figure(figsize=(16, 8), dpi=100)
+    columns = len(array_of_images)
+    #rows = 2
+
+    for i in range(len(array_of_images)):
+        #1 - first line for images
+        fig.add_subplot(1, columns, i + 1)
+        plt.imshow(array_of_images[i], cmap='gray')
+
+    plt.show()
+    plt.clf()
+
 def check_frequencies(array_of_images):
 
     #freq_array = []
@@ -143,7 +156,6 @@ def blur(img, sigma):
 def gauss_pyramid(img, sigma, n_layers):
 
     images_gauss_pyramid = []
-    #temp_img = blur(img, sigma[0])
 
     for i in range(n_layers):
         if(i == 0):
@@ -159,23 +171,29 @@ def laplacian_pyramid(img, sigma, n_layers):
     images_laplac_pyramid = []
     images_gauss_pyramid = gauss_pyramid(img, sigma, n_layers)
 
-    for i in range(n_layers - 1):
+    for i in range(n_layers):
         if(i == 0):
             temp_img = img - images_gauss_pyramid[i]
         else:
-            temp_img = images_gauss_pyramid[i] - images_gauss_pyramid[i + 1]
+            temp_img = images_gauss_pyramid[i - 1] - images_gauss_pyramid[i]
         images_laplac_pyramid.append(temp_img)
+
 
     return images_laplac_pyramid
 
 # step 1
-#
-apple = imread("lena_bw2.jpg")
-#apple = imread("apple_bw.bmp")
-orange = imread("orange.bmp")
+apple = imread("apple_low.bmp")
+orange = imread("orange_low.bmp")
+mask = imread("mask_low.bmp")
 
 
-images_laplac_pyramid = laplacian_pyramid(apple, [1,3,5], 3)
+image_1_pyramid = laplacian_pyramid(apple, [1,3,5], 3)
+image_2_pyramid = laplacian_pyramid(orange, [1,3,5], 3)
+mask_pyramid = gauss_pyramid(mask, [1,3,5], 3)
+
+#formula
+#LS = GM * LA + (1 - GM) * LB
+
+
 #check_frequencies(images_gauss_pyramid)
 #show_frequencies_and_images(images_laplac_pyramid)
-
