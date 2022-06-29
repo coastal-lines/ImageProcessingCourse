@@ -151,11 +151,13 @@ def blur(img, sigma):
 
     blur = np.reshape(temp, [img.shape[0] - (border * 2), img.shape[1] - (border * 2)])
     blur = np.ndarray.astype(blur, np.uint8)
+
     return blur
 
 def gauss_pyramid(img, sigma, n_layers):
 
     images_gauss_pyramid = []
+    temp_img = None
 
     for i in range(n_layers):
         if(i == 0):
@@ -173,11 +175,12 @@ def laplacian_pyramid(img, sigma, n_layers):
 
     for i in range(n_layers):
         if(i == 0):
-            temp_img = img - images_gauss_pyramid[i]
+            temp_img = skimage.img_as_float(img) - skimage.img_as_float(images_gauss_pyramid[i])
+            #temp_img = skimage.img_as_ubyte(temp_img)
         else:
-            temp_img = images_gauss_pyramid[i - 1] - images_gauss_pyramid[i]
+            temp_img = skimage.img_as_float(images_gauss_pyramid[i - 1]) - skimage.img_as_float(images_gauss_pyramid[i])
+            #temp_img = skimage.img_as_ubyte(temp_img)
         images_laplac_pyramid.append(temp_img)
-
 
     return images_laplac_pyramid
 
@@ -186,14 +189,29 @@ apple = imread("apple_low.bmp")
 orange = imread("orange_low.bmp")
 mask = imread("mask_low.bmp")
 
+apple_f = skimage.img_as_float(apple)
+orange_f = skimage.img_as_float(orange)
+mask_f = skimage.img_as_float(mask)
 
-image_1_pyramid = laplacian_pyramid(apple, [1,3,5], 3)
-image_2_pyramid = laplacian_pyramid(orange, [1,3,5], 3)
-mask_pyramid = gauss_pyramid(mask, [1,3,5], 3)
+LA = laplacian_pyramid(apple, [1,3,5], 3)
+LB = laplacian_pyramid(orange, [1,3,5], 3)
+GM = gauss_pyramid(mask, [1,3,5], 3)
+#show_images(LA)
+#show_images(LB)
+#show_images(GM)
+
 
 #formula
 #LS = GM * LA + (1 - GM) * LB
+#LS1 = (skimage.img_as_float(GM[0]) * skimage.img_as_float(LA[0])) + ((1.0 - skimage.img_as_float(GM[0])) * skimage.img_as_float(LB[0]))
+#LS2 = (skimage.img_as_float(GM[1]) * skimage.img_as_float(LA[1])) + ((1.0 - skimage.img_as_float(GM[1])) * skimage.img_as_float(LB[1]))
+#LS3 = (skimage.img_as_float(GM[2]) * skimage.img_as_float(LA[2])) + ((1.0 - skimage.img_as_float(GM[2])) * skimage.img_as_float(LB[2]))
+LS1 = (skimage.img_as_float(GM[0]) * LA[0]) + ((1.0 - skimage.img_as_float(GM[0])) * LB[0])
+LS2 = (skimage.img_as_float(GM[1]) * LA[1]) + ((1.0 - skimage.img_as_float(GM[1])) * LB[1])
+LS3 = (skimage.img_as_float(GM[2]) * LA[2]) + ((1.0 - skimage.img_as_float(GM[2])) * LB[2])
 
+LS = LS1 + LS2 + LS3
+show(skimage.img_as_ubyte(LS))
 
 #check_frequencies(images_gauss_pyramid)
 #show_frequencies_and_images(images_laplac_pyramid)
