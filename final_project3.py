@@ -3,6 +3,7 @@ import skimage.io
 from skimage.io import imread,imsave
 import math
 import matplotlib.pyplot as plt
+from numpy import dstack
 
 def show(img):
     plt.imshow(img, cmap='gray')
@@ -176,42 +177,56 @@ def laplacian_pyramid(img, sigma, n_layers):
     for i in range(n_layers):
         if(i == 0):
             temp_img = skimage.img_as_float(img) - skimage.img_as_float(images_gauss_pyramid[i])
-            #temp_img = skimage.img_as_ubyte(temp_img)
         else:
             temp_img = skimage.img_as_float(images_gauss_pyramid[i - 1]) - skimage.img_as_float(images_gauss_pyramid[i])
-            #temp_img = skimage.img_as_ubyte(temp_img)
         images_laplac_pyramid.append(temp_img)
 
-    return images_laplac_pyramid
+    return images_laplac_pyramid, images_gauss_pyramid
 
-# step 1
-apple = imread("apple_low.bmp")
-orange = imread("orange_low.bmp")
-mask = imread("mask_low.bmp")
+def CombineTwoImages(img1, img2, mask, sigma, n_layers):
+    # step 1
 
-apple_f = skimage.img_as_float(apple)
-orange_f = skimage.img_as_float(orange)
-mask_f = skimage.img_as_float(mask)
+    LA, gauss_LA = laplacian_pyramid(img1, sigma, layers)
+    LB, gauss_LB = laplacian_pyramid(img2, sigma, layers)
 
-LA = laplacian_pyramid(apple, [1,3,5], 3)
-LB = laplacian_pyramid(orange, [1,3,5], 3)
-GM = gauss_pyramid(mask, [1,3,5], 3)
-#show_images(LA)
-#show_images(LB)
-#show_images(GM)
+    GM = gauss_pyramid(mask, [0.5, 0.5, 0.5, 0.5], layers + 1)
+
+    #show_images(gauss_LA)
+    #show_images(LA)
+    #show_images(gauss_LB)
+    #show_images(LB)
+    #show_images(GM)
+
+    LA.append(gauss_LA[-1])
+    LB.append(gauss_LB[-1])
+
+    temp = []
+    for i in range(n_layers + 1):
+        mask = skimage.img_as_float(GM[i])
+        t = LA[i] * mask + LB[i] * (1.0 - mask)
+        temp.append(t)
+    show_images(temp)
+
+    LS = 0
+    for i in range(n_layers + 1):
+        LS = LS + temp[i]
+
+    return LS
+
+#g = tuple(skimage.transform.pyramid_gaussian(img1, downscale=1.1, max_layer = 3))
+#l = tuple(skimage.transform.pyramid_laplacian(img1, downscale=1.1, max_layer = 3))
+#show_images(l)
+#show_images(g)
+
+img1 = imread("data/img1.bmp")
+img2 = imread("data/img2.bmp")
+mask = imread("data/mask.bmp")
+sigma = [0.5, 0.5, 0.5]
+layers = len(sigma)
+result = CombineTwoImages(img1, img2, mask, sigma, layers)
+show(result)
 
 
-#formula
-#LS = GM * LA + (1 - GM) * LB
-#LS1 = (skimage.img_as_float(GM[0]) * skimage.img_as_float(LA[0])) + ((1.0 - skimage.img_as_float(GM[0])) * skimage.img_as_float(LB[0]))
-#LS2 = (skimage.img_as_float(GM[1]) * skimage.img_as_float(LA[1])) + ((1.0 - skimage.img_as_float(GM[1])) * skimage.img_as_float(LB[1]))
-#LS3 = (skimage.img_as_float(GM[2]) * skimage.img_as_float(LA[2])) + ((1.0 - skimage.img_as_float(GM[2])) * skimage.img_as_float(LB[2]))
-LS1 = (skimage.img_as_float(GM[0]) * LA[0]) + ((1.0 - skimage.img_as_float(GM[0])) * LB[0])
-LS2 = (skimage.img_as_float(GM[1]) * LA[1]) + ((1.0 - skimage.img_as_float(GM[1])) * LB[1])
-LS3 = (skimage.img_as_float(GM[2]) * LA[2]) + ((1.0 - skimage.img_as_float(GM[2])) * LB[2])
 
-LS = LS1 + LS2 + LS3
-show(skimage.img_as_ubyte(LS))
-
-#check_frequencies(images_gauss_pyramid)
-#show_frequencies_and_images(images_laplac_pyramid)
+# check_frequencies(images_gauss_pyramid)
+# show_frequencies_and_images(images_laplac_pyramid)
