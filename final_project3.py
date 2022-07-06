@@ -7,7 +7,7 @@ from numpy import dstack
 from skimage.color import rgb2gray
 
 def show(img):
-    plt.imshow(img)
+    plt.imshow(img, cmap='gray')
     plt.show()
 
 def show_frequencies_and_images(array_of_images):
@@ -36,7 +36,7 @@ def show_images(array_of_images):
     for i in range(len(array_of_images)):
         #1 - first line for images
         fig.add_subplot(1, columns, i + 1)
-        plt.imshow(array_of_images[i])
+        plt.imshow(array_of_images[i], cmap='gray')
 
     plt.show()
     plt.clf()
@@ -49,19 +49,6 @@ def check_frequencies(array_of_images):
         freq_next = np.log(1 + abs(np.fft.fftshift(np.fft.fft2(array_of_images[i + 1]))))
         if(np.mean(freq) < np.mean(freq_next)):
             print("!!! something wrong with freq !!!")
-
-def prepare_kernel(sigma):
-    #prepare kernel
-    kernel_width = round((sigma * 6) + 1)
-    kernel_radius = kernel_width // 2
-    kernel = []
-    for x in range(0 - kernel_radius, kernel_radius + 1, 1):
-        for y in range(0 - kernel_radius, kernel_radius + 1, 1):
-            result = (1 / (2 * math.pi * math.pow(sigma, 2))) * (math.e ** ((-math.pow(x, 2) - math.pow(y, 2)) / (2 * math.pow(sigma, 2))))
-            result = format(result, ".5f")
-            kernel.append(float(result))
-
-    return kernel, kernel_radius, kernel_width
 
 def extend_image(img, kernel_width):
 
@@ -117,28 +104,36 @@ def extend_image(img, kernel_width):
 def blur(img, sigma):
 
     #prepare kernel
-    kernel, kernel_radius, kernel_width = prepare_kernel(sigma)
+    kernel_width = round((sigma * 6) + 1)
+    kernel_radius = kernel_width // 2
+    kernel = []
+    for x in range(0 - kernel_radius, kernel_radius + 1, 1):
+        for y in range(0 - kernel_radius, kernel_radius + 1, 1):
+            result = (1 / (2 * math.pi * math.pow(sigma, 2))) * (math.e ** ((-math.pow(x, 2) - math.pow(y, 2)) / (2 * math.pow(sigma, 2))))
+            result = format(result, ".5f")
+            kernel.append(float(result))
 
+    #extend image
     img = extend_image(img, kernel_width)
 
     #apply kernel to image
     border = kernel_radius
+    temp = []
+    for i in range(border, img.shape[0] - border):
+        for j in range(border, img.shape[1] - border):
+            matrix = img[i - border: i + border + 1, j - border: j + border + 1]
 
-    temp = np.zeros((img.shape[0], img.shape[1], img.shape[2]), np.uint8)
+            sum = 0
+            arr = np.reshape(matrix, -1)
+            k = np.reshape(kernel, -1)
 
-    for c in range(img.shape[2]):
-        for i in range(border, img.shape[0] - border):
-            for j in range(border, img.shape[1] - border):
-                matrix = img[i - border: i + border + 1, j - border: j + border + 1]
-                sum = 0
-                test = matrix[:, :, c]
-                arr = np.reshape(test, -1)
-                k = np.reshape(kernel, -1)
-                for m in range(arr.size):
-                    sum += arr[m] * k[m]
-                temp[i, j, c] = np.clip(sum, 0, 255)
+            for m in range(matrix.size):
+                sum += arr[m] * k[m]
 
-    blur = temp[border : img.shape[0] - border, border : img.shape[1] - border, :]
+            temp.append(sum)
+
+    blur = np.reshape(temp, [img.shape[0] - (border * 2), img.shape[1] - (border * 2)])
+
     return blur
 
 def gauss_pyramid(img, sigma, n_layers):
@@ -160,18 +155,12 @@ def laplacian_pyramid(img, sigma, n_layers):
     images_laplac_pyramid = []
     images_gauss_pyramid = gauss_pyramid(img, sigma, n_layers)
 
-    #show_images(images_gauss_pyramid)
-
     for i in range(n_layers):
         if(i == 0):
             temp_img = img - images_gauss_pyramid[i]
-            temp_img = np.int32(img) - np.int32(images_gauss_pyramid[i])
-            temp_img2 = np.invert(np.array(temp_img, dtype=np.int8))
         else:
             temp_img = images_gauss_pyramid[i - 1] - images_gauss_pyramid[i]
-            temp_img = np.int32(images_gauss_pyramid[i - 1]) - np.int32(images_gauss_pyramid[i])
-            temp_img2 = np.invert(np.array(temp_img, dtype=np.int8))
-        images_laplac_pyramid.append(temp_img2)
+        images_laplac_pyramid.append(temp_img)
 
     return images_laplac_pyramid, images_gauss_pyramid
 
@@ -180,12 +169,6 @@ def CombineTwoImages(img1, img2, mask, sigma, n_layers):
 
     LA, gauss_LA = laplacian_pyramid(img1, sigma, layers)
     LB, gauss_LB = laplacian_pyramid(img2, sigma, layers)
-
-    #show_images(gauss_LA)
-    #show_images(gauss_LB)
-
-    last_sigma = sigma[-1]
-    sigma.append(last_sigma)
     GM = gauss_pyramid(mask, sigma, layers)
 
     LA.append(gauss_LA[-1])
@@ -193,8 +176,8 @@ def CombineTwoImages(img1, img2, mask, sigma, n_layers):
     GM.append(GM[-1])
 
     temp = []
-    for i in range(layers + 1):
-        #t = None
+    for i in range(n_layers + 1):
+        t = None
         t = (LA[i] * GM[i]) + LB[i] * (255 - GM[i])
         temp.append(t)
 
@@ -202,21 +185,16 @@ def CombineTwoImages(img1, img2, mask, sigma, n_layers):
     for i in range(n_layers + 1):
         LS = LS + temp[i]
 
-    LS = np.clip(LS,0,255)
-
     return LS
 
-
-img1 = imread("data3/img1.bmp")
-img2 = imread("data3/img2.bmp")
-mask = imread("data3/mask.bmp")
-mask_bw = rgb2gray(mask)
+img1 = imread("data2/img1.bmp", 0)
+img2 = imread("data2/img2.bmp", 0)
+mask = imread("data2/mask.bmp", 0)
 sigma = [0.5, 1, 1.5]
 layers = len(sigma)
-
-
 result = CombineTwoImages(img1, img2, mask, sigma, layers)
 show(result)
+
 
 #sigma - – стандартное отклонение нормального распределения
 # check_frequencies(images_gauss_pyramid)
